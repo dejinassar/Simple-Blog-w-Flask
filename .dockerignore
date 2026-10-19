@@ -1,0 +1,7 @@
+.git
+venv/
+venv310/
+__pycache__/
+*.py[cod]
+.env
+flaskblog/site.db
