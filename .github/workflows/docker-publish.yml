@@ -42,7 +42,7 @@ jobs:
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-      - name: Diagnose EC2 connection
+      - name: Diagnose EC2 SSH connection
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
@@ -65,12 +65,21 @@ jobs:
           ssh-keygen -y -f ~/.ssh/flask-blog-deploy > /dev/null
 
           echo "Step 4: Testing SSH network connectivity"
-if timeout 10 bash -c 'cat < /dev/null > /dev/tcp/'"$EC2_HOST"'/22' 2>/dev/null; then
-  echo "Port 22 is reachable"
-else
-  echo "Port 22 is not reachable from this GitHub runner"
-  exit 1
-fi
+          if timeout 10 bash -c 'cat < /dev/null > /dev/tcp/'"$EC2_HOST"'/22' 2>/dev/null; then
+            echo "Port 22 is reachable"
+          else
+            echo "Port 22 is not reachable from this GitHub runner"
+            exit 1
+          fi
 
-echo "Step 5: Scanning EC2 host key"
-ssh-keyscan -T 10 -H "$EC2_HOST" >> ~/.ssh/known_hosts
+          echo "Step 5: Scanning EC2 host key"
+          ssh-keyscan -T 10 -H "$EC2_HOST" >> ~/.ssh/known_hosts
+
+          echo "Step 6: Connecting to EC2"
+          ssh -vvv \
+            -o ConnectTimeout=15 \
+            -o BatchMode=yes \
+            -i ~/.ssh/flask-blog-deploy \
+            "$EC2_USER@$EC2_HOST" \
+            'echo "SSH connection successful"; sudo docker ps --filter name=flask-blog-container'
+
