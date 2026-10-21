@@ -58,9 +58,7 @@ jobs:
 
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
-          ssh -i ~/.ssh/flask-blog-deploy \
-            "$EC2_USER@$EC2_HOST" 'bash -s' <<'REMOTE'
-          set -eu
+          ssh -vvv -o ConnectTimeout=15 \  -i ~/.ssh/flask-blog-deploy \ "$EC2_USER@$EC2_HOST" 'bash -s' <<'REMOTE'
 
           IMAGE="ghcr.io/dejinassar/simple-blog-w-flask:latest"
 
